@@ -40,7 +40,7 @@ app.get('/', function(req, res) {
 
 app.post('/upload', upload.single('file'), function(req, res) {
   // res.send(200)
-  var file = 'uploads' + '/' + req.file.originalname;
+  var file = __dirname + 'uploads' + '/' + req.file.originalname;
   fs.rename(req.file.path, file, function(err) {
     if (err) {
        res.send(500);
