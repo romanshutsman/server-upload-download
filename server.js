@@ -34,8 +34,7 @@ app.use(cors());
 // });
 
 app.get('/', function(req, res) {
-  // res.sendFile(path.join(__dirname + '/index.html'));
-  res.send('hello');
+  res.sendFile(path.join(__dirname + '/index.html'));
 });
 
 
