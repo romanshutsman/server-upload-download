@@ -10,7 +10,7 @@ var cors = require('cors')
 
 var http = require('http');
 var formidable = require('formidable');
-var upload = multer({ dest: '/tmp/'});
+var upload = multer({ dest: './tmp/'});
 var uploads = './uploads/';
 var download = require('download-file')
 let files = [];
@@ -23,7 +23,7 @@ var pipe = require('pipe');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/'));
+app.use(express.static(__dirname + './'));
 app.use(cors());
 // app.use(function(req, res, next) {
 // //set headers to allow cross origin request.
