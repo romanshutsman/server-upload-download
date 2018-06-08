@@ -1,0 +1,429 @@
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, ViewChildren } from '@angular/core';
+import {FormGroup, AbstractControl, FormBuilder, Validators, NgForm, ValidationErrors} from '@angular/forms';
+import {Router} from '@angular/router';
+
+import {AuthenticationService} from '../../../services/auth/authentication.service';
+import {ApiService} from '../../../services/api/api.service';
+import {NotificationService} from '../../../services/notification/notification.service';
+import {injectViewContainerRef} from '@angular/core/src/render3/instructions';
+import { ActivatedRoute } from '@angular/router';
+import { ParamMap } from '@angular/router';
+import { resolve } from 'url';
+import { Conditional } from '@angular/compiler';
+
+@Component({
+  selector: 'app-user-tier',
+  templateUrl: './user-tier.component.html',
+  styleUrls: ['./user-tier.component.scss']
+})
+
+export class UserTierComponent implements OnInit, AfterViewInit {
+  @ViewChild('inputTag') inputTag: ElementRef;
+  inputTagHeight: number;
+
+  public email: string;
+  public name: string;
+  public userId: string;
+  public editForm: FormGroup;
+  public password: AbstractControl;
+  public passwordNew: AbstractControl;
+  public passwordRepeat: AbstractControl;
+  public pass1: any;
+  public pass2: any;
+  public emails: any = [];
+  public inviteMore: any = [];
+  public validators = [this.validateEmail];
+  public toggleCreate;
+  public firstTime;
+  public tierIdInvite: any;
+  public isLoading = false;
+  public getInvent: any = [];
+  public toggleResend = false;
+  public unreadTiers = [];
+  public unreadInvitation = [];
+  public errorMessages = {
+    'email': 'Please enter a valid email !'
+  };
+  myTiers: any = [];
+
+  stages: any = [
+    'group',
+    'roundOf16',
+    'quarter',
+    'semi',
+    'third',
+    'final',
+  ];
+
+
+
+  constructor(public auth: AuthenticationService,
+              public router: Router,
+              private myHttp: ApiService,
+              private fb: FormBuilder,
+              private notificationService: NotificationService,
+              private route: ActivatedRoute
+              ) {
+    if (auth.isAuthenticated() && auth.getUser().verify) {
+      this.email = auth.getUser().email;
+      this.userId = auth.getUser().userId;
+      this.name = JSON.parse(localStorage.getItem('user')).name;
+    } else if (auth.isAuthenticated() && !auth.getUser().verify) {
+      this.router.navigate(['/confirm-email']);
+    } else {
+      this.router.navigate(['/login']);
+    }
+    this.editForm = fb.group({
+      'password': ['', Validators.compose([Validators.required, Validators.minLength(8),
+        Validators.maxLength(16)])],
+      'passwordNew': ['', Validators.compose([Validators.required, Validators.minLength(8),
+        Validators.maxLength(16)])],
+      'passwordRepeat': ['', Validators.compose([Validators.required, Validators.minLength(8),
+        Validators.maxLength(16)])]
+    });
+    this.password = this.editForm.controls['password'];
+    this.passwordNew = this.editForm.controls['passwordNew'];
+    this.passwordRepeat = this.editForm.controls['passwordRepeat'];
+  }
+
+  ngOnInit() {
+    // this.secondInvite('roman13275@gmail.com');
+    // this.secondInvite('roman13275@gmail.com');
+    if (this.auth.isAuthenticated()) {
+      this.showNotification();
+    }
+    // this.getUserTiers();
+    new Promise(reslove => {
+      setTimeout(() => {
+        this.getUserTiers();
+
+      }, 1000);
+    }).then(() => {
+      console.log(this.myTiers);
+    });
+    this.firstTime = JSON.parse(localStorage.getItem('tog'));
+    if (this.firstTime) {
+      // this.redirectFromMyScores();
+    }
+    this.getUserAcceptedTiers();
+    this.getInvitation();
+    
+    this.route.paramMap.subscribe(params => {
+      console.log(params);
+    });
+    console.log(this.secondInvite('roman13275@gmail.com'));
+  }
+  onTextChange(e) {
+    console.log(e);
+  }
+  showNotification() {
+    this.myHttp.notification().subscribe(
+      (arr: any) => {
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].status !== 'read') {
+            if (arr[i].type === 'invitation') {
+              this.unreadInvitation.push(arr[i].type);
+            }
+            if (arr[i].type === 'info') {
+              this.unreadTiers.push(arr[i].type);
+            }
+          }
+        }
+      });
+  }
+
+
+  ngAfterViewInit() {
+    // this.inputTagHeight = this.inputTag.nativeElement.offsetHeight;
+    // console.log( this.inputTagHeight);
+  }
+
+  addMoreFriends(input, tier, inputTag, user) {
+    console.log(user);
+    this.inviteMore = [];
+    const invitations: any = [];
+    if (Array.isArray(input)) {
+      input.forEach(element => {
+        invitations.push(element.value);
+      });
+    } else {
+      console.log(user._id);
+      console.log(tier['invitations']);
+      invitations.push(input);
+      this.toggleResend = true;
+    }
+    console.log(invitations);
+
+    // this.tierIdInvite = tier['invitations'][0].tier;
+    this.tierIdInvite = tier._id;
+    if (this.auth.isAuthenticated()) {
+      const body = {
+        invitations: invitations,
+        tierId: this.tierIdInvite
+      };
+
+      this.sendInvitation(body, input);
+    }
+  }
+
+  sendInvitation(body, input) {
+    this.myHttp.sendInvitation(body)
+      .subscribe(
+        (tiers) => {
+          this.notificationService.successMsg('Invitation sent !', 'Success');
+          input = [];
+          this.getUserTiers();
+        },
+        (error) => {
+          this.notificationService.errorMsg('Invited emails is not valid !', 'Error');
+        }
+      );
+  }
+
+  getInvitation() {
+    this.isLoading = true;
+    this.myHttp.getInvitation()
+      .subscribe(
+        (tiers) => {
+          this.getInvent = tiers;
+
+
+
+          this.getUserTiers();
+          this.isLoading = false;
+        },
+        (error) => {
+
+        }
+      );
+  }
+
+  acceptTierInvitation(inviteId) {
+    console.log(inviteId);
+    this.myHttp.acceptTierInvitation(inviteId)
+      .subscribe(
+        (tiers) => {
+
+          this.getInvitation();
+          this.notificationService.successMsg('Invitation accepted !', 'Success');
+        },
+        (error) => {
+          this.notificationService.errorMsg('Error!', 'Error');
+        }
+      );
+  }
+
+  rejectTierInvitation(inviteId) {
+    console.log(inviteId);
+    this.myHttp.rejectTierInvitation(inviteId)
+      .subscribe(
+        (tiers) => {
+          console.log(tiers);
+          this.getInvitation();
+          this.notificationService.warn('Invitation rejected !', 'Tier rejected');
+        },
+        (error) => {
+          this.notificationService.errorMsg('Error!', 'Error');
+        }
+      );
+  }
+
+  private validateEmail(control: AbstractControl): ValidationErrors | null {
+    
+  const a =  /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(control.value) ? false : true;
+  //const b = this.sec(control.value);
+  // console.log(this.myTiers);
+
+
+
+  return (a === true ) ? {'email': true} : null;
+}
+//  sec(value) {
+//   this.secondInvite(value).then(
+//     response => {
+//       console.log(response);
+//       return true;
+//     },
+//     error => {
+//       alert(`Rejected: ${error}`);
+//       return false;
+//     }
+//   );
+//  }
+   secondInvite(value) {
+
+    // return new Promise(function(resolve, reject) {
+    //   this.myHttp.getUserTiers(this.userId).toPromise().then(
+    //           res => { // Success
+    //             console.log(res);
+                
+    //             // resolve();
+    //           }
+
+    // });
+
+
+
+        // .then(
+        //   res => { // Success
+        //     console.log(res);
+        //     this.myTiers = res;
+        //     return res;
+        //     // resolve();
+        //   }
+        // ).then((res) => {
+        //   console.log(res);
+
+        // });
+    // });
+
+
+    // this.myHttp.getUserTiers(this.userId)
+    // .subscribe(
+    //   (tiers) => {
+    //     this.myTiers = tiers;
+    //     const ff =  this.myTiers.forEach(element => {
+    //       return   element.invitations.forEach(el => {
+    //           if (el.to === value) {
+    //             console.log('VALUE', el.to);
+    //             match =  true;
+    //             return match;
+    //           } else {
+    //             console.log('else', el.to);
+    //             match =  false;
+    //             return match;
+    //           }
+    //         });
+    //       });
+    //       console.log(ff);
+    //     }
+    //   );
+
+    // this.myHttp.getUserTiers(this.userId)
+    // .subscribe(
+    //   (tiers) => {
+    //     t = tiers;
+    //     console.log(t);
+    //     return t;
+    //   }
+    // );
+    // if(t) {
+    //   console.log(t);
+    // } else {
+    //   console.log('empty');
+    // }
+    let match;
+    console.log(this.myTiers);
+    this.myTiers.forEach(element => {
+      const e =   element.invitations.forEach(el => {
+          if (el.to === value) {
+            console.log('VALUE', el.to);
+            match =  true;
+            return true;
+          } else {
+            console.log('else', el.to);
+            match =  false;
+            return false;
+          }
+        });
+      console.log(e);
+      if (e === true) {
+        return true;
+      } else if (e === false) {
+        return false ;
+      }
+    });
+    console.log(match);
+    return match;
+  }
+
+  checkHight() {
+    this.inputTagHeight = this.inputTag.nativeElement.offsetHeight;
+    console.log(this.inputTag);
+  }
+
+  createTier(form: NgForm) {
+    const values = form.form.value;
+    const emails = [];
+    if (values.items) {
+      for (const email of values.items) {
+        emails.push(email.value);
+      }
+    }
+    const name = values.tierName;
+    const price = values.price;
+    const prize = values.prize;
+    const stage = values.stage;
+
+    const data = {
+      name: name,
+      price: price,
+      prize: prize,
+      stage: stage,
+      owner: this.email,
+      invitations: emails
+    };
+    console.log(data);
+    this.myHttp.createUserTier(data)
+      .subscribe(
+        () => {
+          this.notificationService.successMsg('Tier created !', 'Success');
+        },
+        (error) => {
+          console.log(error);
+          this.notificationService.errorMsg('Invited emails is not valid !', 'Error');
+        }
+      );
+    form.reset();
+  }
+
+  getUserTiers() {
+    this.isLoading = true;
+    this.myHttp.getUserTiers(this.userId)
+      .subscribe(
+        (tiers) => {
+          console.log(tiers);
+          this.myTiers = tiers;
+
+          this.isLoading = false;
+        }
+      );
+  }
+
+  getUserAcceptedTiers() {
+    this.myHttp.getUserAcceptedTiers()
+      .subscribe(
+        (tiers) => {
+
+        }
+      );
+  }
+
+  dropDown(tier) {
+    tier.activate = !tier.activate;
+    this.inputTagHeight = this.inputTag.nativeElement.offsetHeight;
+    // console.log(this.inputTagHeight);
+  }
+
+  changePassword() {
+    const data = {
+      email: this.email,
+      password: this.password.value,
+      newPassword: this.passwordRepeat.value
+    };
+    this.myHttp.changePassword(data)
+      .subscribe(
+        () => {
+          this.notificationService.successMsg('Password changed !', 'Success');
+        },
+        () => {
+          this.notificationService.errorMsg('Password incorrect !', 'Error');
+        });
+    this.editForm.reset();
+  }
+
+  logout() {
+    this.auth.logout();
+    this.router.navigate(['/desktop']);
+  }
+}
