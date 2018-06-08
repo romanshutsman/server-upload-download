@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "supervisor server.js"
+    "start": "node server.js"
   },
   "author": "Roman Shutsman",
   "license": "ISC",
@@ -19,6 +19,7 @@
     "download-file": "^0.1.5",
     "ejs": "^2.6.1",
     "express": "^4.16.1",
+    "foreman": "^3.0.0",
     "formidable": "^1.2.1",
     "js-file-download": "^0.4.1",
     "mime": "^2.3.1",
