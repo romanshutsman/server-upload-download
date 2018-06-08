@@ -1,28 +1,30 @@
+var express = require('express');
+var app = express();
+var port = process.env.PORT || 3000;
 
-var express = require('express'),
-    http = require('http'),
-    formidable = require('formidable'),
-    fs = require('fs'),
-    path = require('path');
 var bodyParser = require('body-parser');
+var path = require('path');
 var multer  = require('multer');
+var fs = require('fs');
+var cors = require('cors')
+
+var http = require('http');
+var formidable = require('formidable');
 var upload = multer({ dest: '/tmp/'});
 var uploads = './uploads/';
-var cors = require('cors')
 var download = require('download-file')
 let files = [];
 var stream = require('stream');
 var mime = require('mime-types');
 var pipe = require('pipe');
-var app = express();
-app.use(cors());
-// app.set('view engine', 'html');
-// app.set('view engine', 'ejs');
-// app.use(express.static('./'));
-app.use(express.static(__dirname + '/'));
+
+
+
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/'));
+app.use(cors());
 // app.use(function(req, res, next) {
 // //set headers to allow cross origin request.
 //     res.header("Access-Control-Allow-Origin", "*");
@@ -31,19 +33,19 @@ app.use(express.static(__dirname + '/'));
 //     next();
 // });
 
-app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname + '/index.html'));
-});
+// app.get('/', function(req, res) {
+//   res.sendFile(path.join(__dirname + '/index.html'));
+// });
 
 
 app.post('/upload', upload.single('file'), function(req, res) {
-  // var file = 'uploads' + '/' + req.file.originalname;
   res.send(200)
+  // var file = 'uploads' + '/' + req.file.originalname;
   // fs.rename(req.file.path, file, function(err) {
   //   if (err) {
   //      res.send(500);
   //   } else {
-  //      res.json({
+  //      res.status(200).json({
   //       message: 'File uploaded successfully',
   //       filename: req.file.name
   //     });
@@ -71,6 +73,6 @@ app.get('/download/:file', function(req, res){
 
 
 
-var server = app.listen(3000, function() {
-  console.log('leistening on port', server.address().port);
+app.listen(port, function() {
+  console.log('leistening on port', port);
 }) 
