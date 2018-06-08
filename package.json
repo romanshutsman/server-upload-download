@@ -2,14 +2,14 @@
   "name": "upload",
   "version": "1.0.0",
   "description": "api upload",
-  "main": "index.js",
+  "main": "server.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/romanshutsman/uploadApi.git"
+    "url": "https://github.com/romanshutsman/client-upload-download.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "supervisor index.js"
+    "start": "node server.js"
   },
   "author": "Roman Shutsman",
   "license": "ISC",
