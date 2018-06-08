@@ -1,7 +1,6 @@
 var express = require('express');
 var app = express();
 var port = process.env.PORT || 3000;
-process.env.TMPDIR = '.'; 
 
 var bodyParser = require('body-parser');
 var path = require('path');
