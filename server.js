@@ -36,26 +36,45 @@ app.use(cors());
 app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
+const uploadDir = './uploads/' // uploading the file to the same path as app.js
 
-
-app.post('/upload', upload.single('file'), function(req, res) {
-  // res.send(200)
-  // res.status(200).json({
-  //   message: 'File uploaded successfully'
-  // });
-  var file =  './uploads/' + req.file.originalname;
-  fs.rename(req.file.path, file, function(err) {
-    if (err) {
-       res.send(500);
-    } else {
-       res.status(200).json({
-        message: 'File uploaded successfully',
-        filename: req.file.name
-      });
-    }
-  });
-  
+app.post('/upload', (req, res) =>{
+  var form = new formidable.IncomingForm()
+  form.multiples = true
+  form.keepExtensions = true
+  form.uploadDir = uploadDir
+  form.parse(req, (err, fields, files) => {
+    if (err) return res.status(500).json({ error: err })
+    res.status(200).json({ uploaded: true })
+  })
+  form.on('fileBegin', function (name, file) {
+    const [fileName, fileExt] = file.name.split('.')
+    file.path = path.join(uploadDir, `${fileName}.${fileExt}`)
+  })
 });
+
+// app.post('/upload', upload.single('file'), function(req, res) {
+  // res.send(200)
+
+  // console.log(req.file.originalname);
+//  res.send("file saved on server");
+  // console.log(req.file.path);
+  // console.log(req.file);
+  // console.log(req.file);
+  // res.send(200);
+  // var file =  './uploads/' + req.file.originalname;
+  // fs.rename(req.file.path, file, function(err) {
+  //   if (err) {
+  //      res.send(500);
+  //   } else {
+  //      res.status(200).json({
+  //       message: 'File uploaded successfully',
+  //       filename: req.file.name
+  //     });
+  //   }
+  // });
+  
+// });
 
 fs.readdirSync(uploads).forEach(file => {
   files.push(file)
