@@ -5,7 +5,7 @@
   "main": "server.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/romanshutsman/client-upload-download.git"
+    "url": "https://github.com/romanshutsman/server-upload-download.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
