@@ -39,18 +39,18 @@ app.get('/', function(req, res) {
 
 
 app.post('/upload', upload.single('file'), function(req, res) {
-  res.send(200)
-  // var file = 'uploads' + '/' + req.file.originalname;
-  // fs.rename(req.file.path, file, function(err) {
-  //   if (err) {
-  //      res.send(500);
-  //   } else {
-  //      res.status(200).json({
-  //       message: 'File uploaded successfully',
-  //       filename: req.file.name
-  //     });
-  //   }
-  // });
+  // res.send(200)
+  var file = 'uploads' + '/' + req.file.originalname;
+  fs.rename(req.file.path, file, function(err) {
+    if (err) {
+       res.send(500);
+    } else {
+       res.status(200).json({
+        message: 'File uploaded successfully',
+        filename: req.file.name
+      });
+    }
+  });
   
 });
 
@@ -64,10 +64,10 @@ app.get('/data', function(req, res){
     name: x  })))
 });
 app.get('/download/:file', function(req, res){
-  // fileReq = req.params.file
-  // var file = __dirname+ '/uploads/' + fileReq;
-  //  res.download('./uploads/'+fileReq); 
-   res.send(200)
+  fileReq = req.params.file
+  var file = __dirname+ '/uploads/' + fileReq;
+   res.download('./uploads/'+fileReq); 
+  //  res.send(200)
 });
 
 
