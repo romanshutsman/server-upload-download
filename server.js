@@ -88,7 +88,12 @@ app.get('/data', function(req, res){
 app.get('/download/:file', function(req, res){
   fileReq = req.params.file
   var file = __dirname+ '/uploads/' + fileReq;
-   res.download('./uploads/'+fileReq); 
+   res.download('./uploads/'+fileReq, function(err){
+    //CHECK FOR ERROR
+    fs.unlink(file);
+  }); 
+
+
 });
 
 
