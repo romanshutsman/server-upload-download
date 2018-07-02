@@ -17,7 +17,7 @@ let files = [];
 var stream = require('stream');
 var mime = require('mime-types');
 var pipe = require('pipe');
-
+var nameFile;
 
 
 
@@ -49,8 +49,15 @@ app.post('/upload', (req, res) =>{
   })
   form.on('fileBegin', function (name, file) {
     const [fileName, fileExt] = file.name.split('.')
-    file.path = path.join(uploadDir, `${fileName}.${fileExt}`)
+    // file.path = path.join(uploadDir, `${fileName}.${fileExt}`)
+    file.path = path.join(uploadDir, file.name)
+    nameFile = file.name;
   })
+  form.on('end', function() {
+    console.log(nameFile, 'NAMEPHOTOS ddddddfdD');
+    fs.unlink(__dirname+ '/uploads/' + nameFile);
+    console.log('-> upload done');
+  });
 });
 
 // app.post('/upload', upload.single('file'), function(req, res) {
@@ -90,7 +97,7 @@ app.get('/download/:file', function(req, res){
   var file = __dirname+ '/uploads/' + fileReq;
    res.download('./uploads/'+fileReq, function(err){
     //CHECK FOR ERROR
-    fs.unlink(file);
+    // fs.unlink(file);
   }); 
 
 
